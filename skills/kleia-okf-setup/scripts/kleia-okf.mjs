@@ -7812,12 +7812,13 @@ function mappingErrors(f, typeNames, tagNames) {
 var nameOf = (path3) => path3.slice(path3.lastIndexOf("/") + 1);
 var STATUS_RULES = [
   [(s) => s === "excluded" || s === "unclassified", (s) => `"${s}" is not possible, because OKF makes every Markdown file in the folder a document; give it the closest type, at low confidence`],
-  [(s, n2) => n2 === "index.md" && s !== "index" && s !== "rename", () => 'index.md is reserved by OKF; keep it as the folder index ("status": "index"), or ask the user to rename it ("status": "rename")'],
+  [(s, n2) => n2 === "index.md" && !["index", "replace", "rename"].includes(s), () => 'index.md is reserved by OKF; keep it as the folder index ("status": "index"), have Act replace it with a generated index ("status": "replace"), or ask the user to rename it ("status": "rename")'],
   [(s, n2) => n2 === "log.md" && s !== "log" && s !== "rename", () => 'log.md is reserved by OKF; keep it as an update log ("status": "log"), or ask the user to rename it ("status": "rename")'],
   [(s, n2) => s === "rename" && n2 !== "index.md" && n2 !== "log.md", () => "only an index.md or a log.md is renamed by the user; map any other file"],
   [(s, n2) => s === "index" && n2 !== "index.md", () => "only an index.md can be kept as a folder index"],
+  [(s, n2) => s === "replace" && n2 !== "index.md", () => "only an index.md can be replaced by a generated index"],
   [(s, n2) => s === "log" && n2 !== "log.md", () => "only a log.md can be kept as an update log"],
-  [(s) => !["mapped", "index", "log", "rename"].includes(s), (s) => `status ${s} is not mapped, index, log or rename`]
+  [(s) => !["mapped", "index", "log", "rename", "replace"].includes(s), (s) => `status ${s} is not mapped, index, log, rename or replace`]
 ];
 function statusErrors(f) {
   const status = f.status ?? "mapped";
@@ -7839,6 +7840,83 @@ function fileErrors(plan2, inventoryPaths) {
   }
   for (const p of inventoryPaths) if (!seen.has(p)) errors.push(`${p}: not in the plan; every Markdown file in the folder needs a type`);
   return errors;
+}
+
+// src/lib/indexes.ts
+var dirOf = (path3) => path3.includes("/") ? path3.slice(0, path3.lastIndexOf("/")) : "";
+var nameOf2 = (path3) => path3.slice(path3.lastIndexOf("/") + 1);
+var linkText = (s) => s.replace(/([\\[\]])/g, "\\$1");
+var target = (s) => /[\s()<>]/.test(s) ? `<${s}>` : s;
+function foldersWithDocs(docs) {
+  const set = /* @__PURE__ */ new Set([""]);
+  for (const d of docs) {
+    let dir = dirOf(d.path);
+    while (dir) {
+      set.add(dir);
+      dir = dirOf(dir);
+    }
+  }
+  return [...set].sort();
+}
+var isEntry = (path3) => /^readme\.md$/i.test(nameOf2(path3));
+var entryOf = (folder, docs) => docs.find((d) => dirOf(d.path) === folder && isEntry(d.path));
+function byOrder(a, b) {
+  if (isEntry(a.path) !== isEntry(b.path)) return isEntry(a.path) ? -1 : 1;
+  const ao = a.order ?? Number.POSITIVE_INFINITY;
+  const bo = b.order ?? Number.POSITIVE_INFINITY;
+  return ao - bo || a.title.localeCompare(b.title) || a.path.localeCompare(b.path);
+}
+function renderIndex({ folder, heading, docs, subfolders, root }) {
+  const lines = root ? ["---", 'okf_version: "0.2"', "---", ""] : [];
+  lines.push(`# ${heading}`);
+  const here = docs.filter((d) => dirOf(d.path) === folder).sort(byOrder);
+  if (here.length) {
+    lines.push("", "## Documents", "");
+    for (const d of here) lines.push(`* [${linkText(d.title)}](${target(nameOf2(d.path))})${d.description ? ` - ${d.description}` : ""}`);
+  }
+  if (subfolders.length) {
+    lines.push("", "## Folders", "");
+    for (const [path3, name] of subfolders) lines.push(`* [${linkText(name)}](${target(`${nameOf2(path3)}/index.md`)})`);
+  }
+  return `${lines.join("\n")}
+`;
+}
+function subfoldersOf(folder, folders) {
+  return folders.filter((f) => f !== "" && f !== folder && dirOf(f) === folder);
+}
+var LOG_HEADING = "# Directory Update Log";
+function renderLog(existing, date, bullet, replace = true) {
+  const entry2 = `* ${bullet}`;
+  if (!existing) return `${LOG_HEADING}
+
+## ${date}
+
+${entry2}
+`;
+  const day = `## ${date}
+
+`;
+  const label = replace ? /^\*\*[^*]+\*\*/.exec(bullet)?.[0] : void 0;
+  if (existing.includes(day)) {
+    const start3 = existing.indexOf(day) + day.length;
+    const end = existing.indexOf("\n## ", start3);
+    const section2 = existing.slice(start3, end < 0 ? existing.length : end);
+    const kept = section2.split("\n").filter((l) => !(label && l.startsWith(`* ${label}`)));
+    const merged = [entry2, ...kept.filter((l) => l.trim())].join("\n");
+    return `${existing.slice(0, start3)}${merged}
+${end < 0 ? "" : `
+${existing.slice(end + 1)}`}`;
+  }
+  const start2 = existing.indexOf("\n## ");
+  const head = start2 < 0 ? existing.trimEnd() : existing.slice(0, start2).trimEnd();
+  const rest = start2 < 0 ? "" : existing.slice(start2 + 1);
+  return `${head}
+
+## ${date}
+
+${entry2}
+${rest ? `
+${rest}` : ""}`;
 }
 
 // src/lib/plan-check.ts
@@ -7896,10 +7974,14 @@ function keptIndexErrors(plan2, inv) {
     return extra.length ? [`${f.path}: has frontmatter (${extra.join(", ")}), and OKF allows none on a folder index, so it can't be kept as one: set "status": "rename" with "renameTo": "overview.md", and add a decision asking the user to rename it`] : [];
   });
 }
+function replacedIndexErrors(plan2) {
+  const folders = new Set(foldersWithDocs(plan2.files.filter(isMapped).map((f) => ({ path: f.path, title: "" }))));
+  return plan2.files.filter((f) => f.status === "replace" && f.path !== "index.md" && !folders.has(f.path.slice(0, -"/index.md".length))).map((f) => `${f.path}: its folder has no documents, so Act would generate no index to replace it with; keep it ("status": "index") or ask the user to rename it`);
+}
 function checkPlan(plan2, inv) {
   const inventoryPaths = new Set(inv.files.map((f) => f.path));
   return {
-    errors: [...typeErrors(plan2), ...tagErrors(plan2), ...fileErrors(plan2, inventoryPaths), ...decisionErrors(plan2, inventoryPaths), ...editErrors(plan2), ...ownTypeErrors(plan2, inv), ...keptIndexErrors(plan2, inv)],
+    errors: [...typeErrors(plan2), ...tagErrors(plan2), ...fileErrors(plan2, inventoryPaths), ...decisionErrors(plan2, inventoryPaths), ...editErrors(plan2), ...ownTypeErrors(plan2, inv), ...keptIndexErrors(plan2, inv), ...replacedIndexErrors(plan2)],
     warnings: warningsFor(plan2)
   };
 }
@@ -8037,6 +8119,7 @@ var STATES = {
   index: ["Folder index", "quiet", "index"],
   log: ["Update log", "quiet", "index"],
   rename: ["You rename it", "warn", "index"],
+  replace: ["Replaced by Act", "warn", "index"],
   low: ["Low", "warn", "low"],
   medium: ["Medium", "", "all"],
   high: ["High", "ok", "all"]
@@ -8050,7 +8133,7 @@ function files({ plan: plan2, count: count2 }) {
   const candidates2 = [
     ["all", "All", plan2.files.length],
     ["low", "Low confidence", count2((f) => mapped(f) && f.confidence === "low")],
-    ["index", "Kept indexes and logs", count2((f) => f.status === "index" || f.status === "log" || f.status === "rename")]
+    ["index", "Indexes and logs", count2((f) => ["index", "log", "rename", "replace"].includes(f.status ?? ""))]
   ];
   const filters = candidates2.filter(([k, , n2]) => k === "all" || n2 > 0);
   const seg = filters.map(([k, l, n2], i) => `<button type="button" data-filter="${k}"${i === 0 ? ' class="on"' : ""}>${esc(l)} ${n2}</button>`).join("");
@@ -8082,8 +8165,18 @@ function frontmatter(ctx) {
 }
 
 // src/report/descriptions.ts
+function wrote(s) {
+  const own2 = s.ownDescriptions ? `, ${s.ownDescriptions} of them with their own description` : "";
+  const items = [
+    `<li>Frontmatter on ${plural(s.documents, "document")}${own2}. The text below it is unchanged.</li>`,
+    ...s.changes.map((c) => `<li>Changed <code>${esc(c.change)}</code> in ${plural(c.documents, "document")}, as you decided.</li>`),
+    ...s.indexes.map((i) => `<li><code>${esc(i.path)}</code>${i.replaced ? " replaced your hand-written index, as you decided; git still has the old one." : " generated."}</li>`),
+    "<li><code>log.md</code> with one entry for the pivot.</li>"
+  ];
+  return `<h2>What Act wrote</h2><ul class="wrote">${items.join("")}</ul>`;
+}
 var entry = (f) => `<li class="entry"><span class="t">${esc(f.title)}</span><span class="d">${esc(f.description)}</span><code class="small muted">${esc(f.path)}</code></li>`;
-function descriptions({ state, examples }) {
+function descriptions({ state, examples, summary }) {
   const flags = state.flags ?? [];
   const shown = flags.slice(0, LIMITS.reviewFlags);
   const more = flags.length - shown.length;
@@ -8091,11 +8184,13 @@ function descriptions({ state, examples }) {
   const rules = state.styleRules.length ? `<p class="small">Style rules you gave: ${state.styleRules.map(esc).join("; ")}</p>` : "";
   const all = [...state.files].sort((a, b) => a.path.localeCompare(b.path));
   return `<section class="chapter" id="descriptions">
-  <h1>Descriptions</h1>
-  <div class="notice">${ICONS.comment}<span class="t">Reply in your chat with your agent</span><span class="d">Say <b>OK</b>, or comment on the style, for example "shorter, and no marketing words". A style comment applies to every description.</span></div>
-  <p class="lead">Ten examples, as they read in a folder index. Check the style, not every word.</p>
+  <h1>Review</h1>
+  <div class="notice">${ICONS.comment}<span class="t">Reply in your chat with your agent</span><span class="d">${examples.length ? 'Say <b>OK</b>, or comment on the style, for example "shorter, and no marketing words". A style comment applies to every description.' : "Say <b>OK</b>, or tell your agent what looks wrong."}</span></div>
+  ${wrote(summary)}
+  <h2>Descriptions</h2>
+  ${examples.length ? `<p class="lead">${plural(examples.length, "example")}, as they read in a folder index. Check the style, not every word.</p>
   ${rules}
-  <ul class="entries">${examples.map(entry).join("")}</ul>
+  <ul class="entries">${examples.map(entry).join("")}</ul>` : '<p class="lead">Every document kept its own description, so there is no style to check.</p>'}
   <h2>Flags</h2>
   <p class="lead">Worth a look. Flags do not block anything.</p>
   ${flagList}
@@ -8132,10 +8227,12 @@ var WORDS = {
 };
 function filesRow({ inv, count: count2 }) {
   const kept = count2((f) => f.status === "index");
+  const replaced = count2((f) => f.status === "replace");
   const logs = count2((f) => f.status === "log");
   const indexes = kept ? ` ${plural(kept, "hand-written <code>index.md</code> file")} kept as folder ${kept === 1 ? "index" : "indexes"}.` : "";
+  const generated = replaced ? ` ${plural(replaced, "hand-written <code>index.md</code> file")} replaced by a generated index.` : "";
   const logsKept = logs ? ` ${plural(logs, "<code>log.md</code> file")} kept as update ${logs === 1 ? "log" : "logs"}.` : "";
-  return row("Files", `${plural(inv.files.length, "Markdown file")}, each one a document in the bundle.${indexes}${logsKept}`);
+  return row("Files", `${plural(inv.files.length, "Markdown file")}, each one a document in the bundle.${indexes}${generated}${logsKept}`);
 }
 function gitRow({ inv }) {
   if (inv.gitError) return row("Git history", `The folder is in git, but reading its history failed (${esc(inv.gitError)}). Ask your agent to run the inventory again.`);
@@ -8500,12 +8597,12 @@ function footnotes(body) {
   const refs = [...body.matchAll(FOOTNOTE_REF_RE)].filter((m) => body[(m.index ?? 0) + m[0].length] !== ":").map((m) => (m[1] ?? "").trim());
   return { labels, refs };
 }
-var dirOf = (path3) => path3.includes("/") ? path3.slice(0, path3.lastIndexOf("/")) : "";
+var dirOf2 = (path3) => path3.includes("/") ? path3.slice(0, path3.lastIndexOf("/")) : "";
 function parseDoc(content, path3) {
   const text = content.replace(/\r\n?/g, "\n");
   const split = splitYaml(text);
   const name = path3.slice(path3.lastIndexOf("/") + 1);
-  const dir = dirOf(path3);
+  const dir = dirOf2(path3);
   const role = name === "index.md" ? "directory-index" : name === "log.md" ? "update-log" : "concept";
   const problems = [...split.problems];
   let meta = { extensions: /* @__PURE__ */ new Set(), problems: [] };
@@ -9130,6 +9227,7 @@ td.num { font-variant-numeric: tabular-nums; text-align: right; }
 .cbox { display: none; }
 .cbox.on { display: block; }
 /* A notice is a card, like Kleia's Card primitive: hairline border and card fill, never a coloured side stripe. */
+.wrote { margin: 0 0 18px; padding-left: 20px; line-height: 1.6; }
 .entries { list-style: none; padding: 0; margin: 0 0 18px; display: grid; gap: 8px; }
 .entries .entry { display: grid; gap: 2px; border: 1px solid var(--border); border-radius: 0.45rem; background: var(--card); padding: 10px 14px; }
 .entries .entry .t { font-weight: 600; }
@@ -9161,7 +9259,7 @@ function navItems({ plan: plan2, open: open2, withFm }, act2, validate) {
       ["trust", "Trust", "done", ""]
     ] : [],
     ["overview", "Overview", "compass", ""],
-    ...act2 ? [["descriptions", "Descriptions", "files", count(act2.state.files.length)]] : [],
+    ...act2 ? [["descriptions", "Review", "files", count(act2.state.files.length)]] : [],
     ["decisions", "Decisions", "decisions", decided],
     ["types", "Types", "types", count(plan2.types.length)],
     ["tags", "Tags", "tags", count(plan2.tags.length)],
@@ -9172,7 +9270,7 @@ function navItems({ plan: plan2, open: open2, withFm }, act2, validate) {
 var quietFoot = (left, right) => `<div class="foot"><div class="status"><span>${left}</span><span>${right}</span></div></div>`;
 function foot({ open: open2, approvedAt: approvedAt2 }, act2, validate) {
   if (validate) return quietFoot("Validate: check the results", "Answer your agent in chat");
-  if (act2) return quietFoot("Act: review the descriptions", "Reply OK in your chat");
+  if (act2) return quietFoot("Act: review what was written", "Reply OK in your chat");
   if (approvedAt2) return quietFoot("Plan approved", "Act is next");
   return `<div class="foot js-only">
     <div class="status"><span class="open${open2 ? " on" : ""}" data-foot-open>${open2 ? `${plural(open2, "decision")} open` : "All decided"}</span><span data-foot-changes>0 answers to send</span></div>
@@ -9294,83 +9392,6 @@ next: the report now shows the plan as approved (ask the user to reload it); tel
     return 0;
   }
 };
-
-// src/lib/indexes.ts
-var dirOf2 = (path3) => path3.includes("/") ? path3.slice(0, path3.lastIndexOf("/")) : "";
-var nameOf2 = (path3) => path3.slice(path3.lastIndexOf("/") + 1);
-var linkText = (s) => s.replace(/([\\[\]])/g, "\\$1");
-var target = (s) => /[\s()<>]/.test(s) ? `<${s}>` : s;
-function foldersWithDocs(docs) {
-  const set = /* @__PURE__ */ new Set([""]);
-  for (const d of docs) {
-    let dir = dirOf2(d.path);
-    while (dir) {
-      set.add(dir);
-      dir = dirOf2(dir);
-    }
-  }
-  return [...set].sort();
-}
-var isEntry = (path3) => /^readme\.md$/i.test(nameOf2(path3));
-var entryOf = (folder, docs) => docs.find((d) => dirOf2(d.path) === folder && isEntry(d.path));
-function byOrder(a, b) {
-  if (isEntry(a.path) !== isEntry(b.path)) return isEntry(a.path) ? -1 : 1;
-  const ao = a.order ?? Number.POSITIVE_INFINITY;
-  const bo = b.order ?? Number.POSITIVE_INFINITY;
-  return ao - bo || a.title.localeCompare(b.title) || a.path.localeCompare(b.path);
-}
-function renderIndex({ folder, heading, docs, subfolders, root }) {
-  const lines = root ? ["---", 'okf_version: "0.2"', "---", ""] : [];
-  lines.push(`# ${heading}`);
-  const here = docs.filter((d) => dirOf2(d.path) === folder).sort(byOrder);
-  if (here.length) {
-    lines.push("", "## Documents", "");
-    for (const d of here) lines.push(`* [${linkText(d.title)}](${target(nameOf2(d.path))})${d.description ? ` - ${d.description}` : ""}`);
-  }
-  if (subfolders.length) {
-    lines.push("", "## Folders", "");
-    for (const [path3, name] of subfolders) lines.push(`* [${linkText(name)}](${target(`${nameOf2(path3)}/index.md`)})`);
-  }
-  return `${lines.join("\n")}
-`;
-}
-function subfoldersOf(folder, folders) {
-  return folders.filter((f) => f !== "" && f !== folder && dirOf2(f) === folder);
-}
-var LOG_HEADING = "# Directory Update Log";
-function renderLog(existing, date, bullet, replace = true) {
-  const entry2 = `* ${bullet}`;
-  if (!existing) return `${LOG_HEADING}
-
-## ${date}
-
-${entry2}
-`;
-  const day = `## ${date}
-
-`;
-  const label = replace ? /^\*\*[^*]+\*\*/.exec(bullet)?.[0] : void 0;
-  if (existing.includes(day)) {
-    const start3 = existing.indexOf(day) + day.length;
-    const end = existing.indexOf("\n## ", start3);
-    const section2 = existing.slice(start3, end < 0 ? existing.length : end);
-    const kept = section2.split("\n").filter((l) => !(label && l.startsWith(`* ${label}`)));
-    const merged = [entry2, ...kept.filter((l) => l.trim())].join("\n");
-    return `${existing.slice(0, start3)}${merged}
-${end < 0 ? "" : `
-${existing.slice(end + 1)}`}`;
-  }
-  const start2 = existing.indexOf("\n## ");
-  const head = start2 < 0 ? existing.trimEnd() : existing.slice(0, start2).trimEnd();
-  const rest = start2 < 0 ? "" : existing.slice(start2 + 1);
-  return `${head}
-
-## ${date}
-
-${entry2}
-${rest ? `
-${rest}` : ""}`;
-}
 
 // src/lib/provenance.ts
 import { execFileSync as execFileSync2, spawnSync } from "node:child_process";
@@ -9537,10 +9558,10 @@ function startProblems({ repo, inv, plan: plan2, approval, planArg, generated })
   return [...problems, ...reservedProblems(folder, plan2, generated)];
 }
 function reservedProblems(folder, plan2, generated) {
-  const kept = new Set(plan2.files.filter((f) => f.status === "index").map((f) => f.path));
+  const kept = new Set(plan2.files.filter((f) => f.status === "index" || f.status === "replace").map((f) => f.path));
   const docs = plan2.files.filter(inBundle).map((f) => ({ path: f.path, title: "" }));
   const targets2 = [...foldersWithDocs(docs).map((d) => d ? `${d}/index.md` : "index.md").filter((p) => !kept.has(p)), "log.md"];
-  return targets2.filter((p) => existsSync5(join6(folder, p)) && !generated.has(p)).map((p) => `${p} exists and is not one Act generated; Act would have to replace it. Ask the user to rename it (Act never moves files), or to revise the plan so it is kept as the folder index`);
+  return targets2.filter((p) => existsSync5(join6(folder, p)) && !generated.has(p)).map((p) => `${p} exists and is not one Act generated; Act would have to replace it. Ask the user to rename it (Act never moves files), or to revise the plan so it is kept as the folder index or replaced`);
 }
 function actFile(f, own2, prev, input) {
   const choice = chooseTitle(f.path, own2.title, input.rootTitle, input.corpus);
@@ -10064,6 +10085,41 @@ function applyLine(ctx, line2, out) {
   else out.accepted++;
 }
 
+// src/lib/act-summary.ts
+function actSummary(inv, plan2, state) {
+  const own2 = new Map(inv.files.map((f) => [f.path, f.values]));
+  const byPath = new Map(plan2.files.map((f) => [f.path, f]));
+  const counts2 = /* @__PURE__ */ new Map();
+  const add = (line2) => void counts2.set(line2, (counts2.get(line2) ?? 0) + 1);
+  for (const f of state.files) {
+    const p = byPath.get(f.path);
+    if (!p) continue;
+    const values = own2.get(f.path);
+    for (const edit of editsFor(plan2, p, values)) {
+      const value = values?.[edit.key];
+      const to = typeof value === "string" ? edit.map?.[value] : void 0;
+      if (to !== void 0 && to !== value) add(`${edit.key}: ${value} \u2192 ${to}`);
+      if (edit.addTags?.length) add("tags: the planned tags added to your own");
+    }
+  }
+  const replaced = new Set(plan2.files.filter((f) => f.status === "replace").map((f) => f.path));
+  return {
+    documents: state.files.length,
+    ownDescriptions: state.files.filter((f) => f.ownDescription).length,
+    changes: [...counts2].map(([change, documents]) => ({ change, documents })),
+    indexes: state.generated.filter((g) => g === "index.md" || g.endsWith("/index.md")).map((path3) => ({ path: path3, replaced: replaced.has(path3) }))
+  };
+}
+function summaryLines(s) {
+  const own2 = s.ownDescriptions ? ` (${s.ownDescriptions} kept their own description)` : "";
+  const indexes = s.indexes.map((i) => `${i.path}${i.replaced ? " (replaced the hand-written one)" : ""}`).join(", ");
+  return [
+    `wrote: frontmatter on ${plural2(s.documents, "document")}${own2}`,
+    `changed values: ${s.changes.length ? s.changes.map((c) => `${c.change} (${plural2(c.documents, "document")})`).join("; ") : "none"}`,
+    `indexes: ${indexes || "none"} \xB7 log.md`
+  ].join("\n");
+}
+
 // src/commands/serve.ts
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -10355,18 +10411,22 @@ async function review(io, repo) {
   saveAct(repo, state);
   const byPath = new Map(plan2.files.map((f) => [f.path, f]));
   const examples = pickExamples(state.files, byPath);
-  writeText(workFile(repo, "report.html"), renderReport(inv, plan2, "act", approval.approvedAt, { act: { state, examples } }));
+  const summary = actSummary(inv, plan2, state);
+  writeText(workFile(repo, "report.html"), renderReport(inv, plan2, "act", approval.approvedAt, { act: { state, examples, summary } }));
   const shown = state.flags.slice(0, LIMITS.reviewFlags);
   const more = state.flags.length - shown.length;
   const address = reportAddress(repo);
-  io.out(
-    `examples:
+  const shownExamples = examples.length ? `examples:
 ${examples.map((e) => `- ${e.title}: ${e.description} (${e.path} \xB7 ${byPath.get(e.path)?.type ?? ""} \xB7 ${(byPath.get(e.path)?.tags ?? []).join(", ")})`).join("\n")}
-flags:
+` : "examples: none, every document kept its own description\n";
+  const show = examples.length ? "show the user what Act wrote, the examples and the flags, and give them the report link (it has every description); ask for one OK, or a comment on style" : "show the user what Act wrote and the flags, and give them the report link; ask for one OK";
+  io.out(
+    `${summaryLines(summary)}
+${shownExamples}flags:
 ${shown.length ? shown.map((f) => `- ${f.detail}: ${listed(f.paths)}`).join("\n") : "- none"}${more > 0 ? `
 - and ${more} more, listed in the report` : ""}
 report: ${address}#descriptions
-next: show the user the examples and flags (the report has every description); ask for one OK, or a comment on style. OK: \`kleia-okf act done\`. A style comment: \`kleia-okf act restyle --rule "<the rule>"\`, then describe every file again, write and review. A comment on one file: send its new line to \`act describe\`, then write and review. Flags do not block`
+next: ${show}. OK: \`kleia-okf act done\`. A style comment: \`kleia-okf act restyle --rule "<the rule>"\`, then describe every file again, write and review. A comment on one file: send its new line to \`act describe\`, then write and review. Flags do not block`
   );
   return 0;
 }

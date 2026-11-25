@@ -63,14 +63,15 @@ It also refuses when a file Act wrote has been changed since. Ask the user befor
 
 ## 4. Review
 
-Run `act review`. It picks 10 example descriptions across types and folders, at most 5 flag items, and re-renders the report with a **Descriptions** chapter.
+Run `act review`. It prints what Act wrote, picks 10 example descriptions across types and folders and at most 5 flag items, and re-renders the report with a **Review** chapter.
 
 In chat, say:
-- how many files changed;
-- that every fingerprint matches;
-- how many indexes were written.
+- what Act wrote: the documents, the values it changed as the user decided, and the indexes (name any it replaced);
+- that every fingerprint matches.
 
-Then show the examples (title and description, as in an index) and the flags. Give the report link for the full list. Ask for **one OK**, or a comment on style. This is a style check, not a proofread.
+Then show the examples (title and description, as in an index) and the flags. Always give the report link. Ask for **one OK**, or a comment on style. This is a style check, not a proofread.
+
+When every document kept its own description, there are no examples and no style to check. Still show what Act wrote and give the report link, and ask for one OK.
 
 - **OK:** run `act done`. Open flags are carried into Validate.
 - **A style comment** ("shorter", "no 'learn how to'"): run `act restyle --rule "<their words>"`. Every description you wrote is then cleared. Describe every file again under the new rule (step 2), run `act write` and `act review`, and show a new sample.

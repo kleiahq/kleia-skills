@@ -60,9 +60,14 @@ Each one changes the outcome, and the user can answer it from the card alone.
 - "Something else" is added for you.
 
 **When you need one:**
-- **Existing `index.md` files:** one decision for all of them. Recommend keeping them as folder indexes (their URLs stay); the alternative is that the user renames them to `overview.md`, so OKF generates the listing; then run `inventory` again. You never move files yourself. Say in the consequences:
+- **Existing `index.md` files:** one decision for all of them, with three options:
+  - keep them as folder indexes (`"status": "index"`, recommended: their text and URLs stay);
+  - replace them with generated indexes (`"status": "replace"`): Act overwrites each one with a listing of its folder, at the same path, so links to it keep working. Say that their own text goes, and that git still has it;
+  - the user renames them to `overview.md`, so their text becomes a document and OKF generates the listing; then run `inventory` again.
+
+  Never delete, move or edit them yourself, whatever the user answers: set the status, and Act does the rest. Say in the consequences:
   - a kept root `index.md` gets `okf_version` added, and the documents directly in the root are then listed in no index; with many of them, recommend renaming;
-  - an `index.md` with frontmatter can't be kept (`plan check` refuses it): give it `"status": "rename"` with `"renameTo": "overview.md"`, and add a decision asking the user to rename it. `approve` waits until they have; then run `inventory` again and map the renamed file.
+  - an `index.md` with frontmatter can't be kept (`plan check` refuses it): offer replace or rename. For rename, give it `"status": "rename"` with `"renameTo": "overview.md"`, and add a decision asking the user to rename it. `approve` waits until they have; then run `inventory` again and map the renamed file.
 - **A clash from the inventory:** an existing `log.md`; a key OKF reads differently (Hugo's `type`, `status: wip`); TOML, JSON or broken frontmatter. Set `key` on a decision about a frontmatter key.
   - **The user's own `type`:** Act never adds a key a file already has, so without an edit these files never get their OKF type, and `plan check` refuses the plan. Offer: replace their `type` values with the planned types (recommended; say that their site generator may read `type` too, for layouts), with `{ "decision": "D1", "option": 1, "key": "type", "plan": true }`; or stop, and setup can't go on for these files.
   - Never offer "overwrite the user's key" as an option. Mapping their values (for example `wip` → `draft`) is fine, because the user chooses it.
@@ -71,7 +76,7 @@ Each one changes the outcome, and the user can answer it from the card alone.
 - **Low-confidence files:** put them all in one decision with `rows`, one row per file. `choices` lists the proposed type first, then the runner-up.
 - **A taxonomy you changed:** where your vocabulary departs from terms the user already uses.
 
-**What an option can do.** Only these: keep a status (`index`, `log`), make an `edits` entry, have the user rename or move files and then run `inventory` again, or stop. There is no skip, and nothing can be recorded under another key. Each consequence says what will actually happen.
+**What an option can do.** Only these: set a status (`index`, `replace`, `log`), make an `edits` entry, have the user rename or move files and then run `inventory` again, or stop. There is no skip, and nothing can be recorded under another key. Each consequence says what will actually happen. A "Something else" answer becomes one of these too; when it asks for something else (deleting a file, editing a doc), say that setup can't do it and offer the closest option.
 
 Group similar items into one decision. Settle what you can yourself. More than about 7 decisions means you haven't grouped enough.
 
