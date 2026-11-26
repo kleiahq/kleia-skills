@@ -1021,7 +1021,7 @@ var require_foldFlowLines = __commonJS({
         else
           end = lineWidth - indentAtStart;
       }
-      let split = void 0;
+      let split2 = void 0;
       let prev = void 0;
       let overflow = false;
       let i = -1;
@@ -1054,18 +1054,18 @@ var require_foldFlowLines = __commonJS({
           if (mode === FOLD_BLOCK)
             i = consumeMoreIndentedLines(text, i, indent.length);
           end = i + indent.length + endStep;
-          split = void 0;
+          split2 = void 0;
         } else {
           if (ch === " " && prev && prev !== " " && prev !== "\n" && prev !== "	") {
             const next2 = text[i + 1];
             if (next2 && next2 !== " " && next2 !== "\n" && next2 !== "	")
-              split = i;
+              split2 = i;
           }
           if (i >= end) {
-            if (split) {
-              folds.push(split);
-              end = split + endStep;
-              split = void 0;
+            if (split2) {
+              folds.push(split2);
+              end = split2 + endStep;
+              split2 = void 0;
             } else if (mode === FOLD_QUOTED) {
               while (prev === " " || prev === "	") {
                 prev = ch;
@@ -1078,7 +1078,7 @@ var require_foldFlowLines = __commonJS({
               folds.push(j);
               escapedFolds[j] = true;
               end = j + endStep;
-              split = void 0;
+              split2 = void 0;
             } else {
               overflow = true;
             }
@@ -4612,13 +4612,13 @@ var require_resolve_block_scalar = __commonJS({
       return { mode, indent, chomp, comment: comment2, length };
     }
     function splitLines(source) {
-      const split = source.split(/\n( *)/);
-      const first = split[0];
+      const split2 = source.split(/\n( *)/);
+      const first = split2[0];
       const m = first.match(/^( *)/);
       const line0 = m?.[1] ? [m[1], first.slice(m[1].length)] : ["", first];
       const lines = [line0];
-      for (let i = 1; i < split.length; i += 2)
-        lines.push([split[i], split[i + 1]]);
+      for (let i = 1; i < split2.length; i += 2)
+        lines.push([split2[i], split2[i + 1]]);
       return lines;
     }
     exports.resolveBlockScalar = resolveBlockScalar;
@@ -7923,8 +7923,8 @@ ${rest}` : ""}`;
 var KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 function typeSlugs(types2) {
   return new Set(types2.flatMap((t) => {
-    const slug = t.name.toLowerCase().replace(/\s+/g, "-");
-    return [slug, `${slug}s`, slug.replace(/y$/, "ies")];
+    const slug2 = t.name.toLowerCase().replace(/\s+/g, "-");
+    return [slug2, `${slug2}s`, slug2.replace(/y$/, "ies")];
   }));
 }
 function typeErrors(plan2) {
@@ -8170,13 +8170,13 @@ function wrote(s) {
   const items = [
     `<li>Frontmatter on ${plural(s.documents, "document")}${own2}. The text below it is unchanged.</li>`,
     ...s.changes.map((c) => `<li>Changed <code>${esc(c.change)}</code> in ${plural(c.documents, "document")}, as you decided.</li>`),
-    ...s.indexes.map((i) => `<li><code>${esc(i.path)}</code>${i.replaced ? " replaced your hand-written index, as you decided; git still has the old one." : " generated."}</li>`),
+    ...s.indexes.map((i) => `<li><code>${esc(i.path)}</code>${i.replaced ? " replaced your hand-written index, as you decided; if it was committed, git still has it." : " generated."}</li>`),
     "<li><code>log.md</code> with one entry for the pivot.</li>"
   ];
   return `<h2>What Act wrote</h2><ul class="wrote">${items.join("")}</ul>`;
 }
 var entry = (f) => `<li class="entry"><span class="t">${esc(f.title)}</span><span class="d">${esc(f.description)}</span><code class="small muted">${esc(f.path)}</code></li>`;
-function descriptions({ state, examples, summary }) {
+function descriptions({ state, examples, summary: summary2 }) {
   const flags = state.flags ?? [];
   const shown = flags.slice(0, LIMITS.reviewFlags);
   const more = flags.length - shown.length;
@@ -8186,7 +8186,7 @@ function descriptions({ state, examples, summary }) {
   return `<section class="chapter" id="descriptions">
   <h1>Review</h1>
   <div class="notice">${ICONS.comment}<span class="t">Reply in your chat with your agent</span><span class="d">${examples.length ? 'Say <b>OK</b>, or comment on the style, for example "shorter, and no marketing words". A style comment applies to every description.' : "Say <b>OK</b>, or tell your agent what looks wrong."}</span></div>
-  ${wrote(summary)}
+  ${wrote(summary2)}
   <h2>Descriptions</h2>
   ${examples.length ? `<p class="lead">${plural(examples.length, "example")}, as they read in a folder index. Check the style, not every word.</p>
   ${rules}
@@ -8258,17 +8258,17 @@ function foundRows(ctx) {
 }
 function overview(ctx) {
   const { inv, plan: plan2, open: open2, approvedAt: approvedAt2 } = ctx;
-  const words2 = approvedAt2 ? WORDS.approved : WORDS.proposal;
+  const words3 = approvedAt2 ? WORDS.approved : WORDS.proposal;
   const approvedNotice = approvedAt2 ? `<div class="notice">${ICONS.done}<span class="t">Plan approved on ${esc(longDate(approvedAt2))}</span><span class="d">This is the plan your agent will follow. Nothing in your docs has changed yet: Act, the next stage, adds the frontmatter when you say so.</span></div>` : "";
   return `<section class="chapter" id="overview">
   <h1>Analysis of ${esc(inv.folder)}/</h1>
-  <p class="lead">${words2.lead(esc(inv.folder))}</p>
+  <p class="lead">${words3.lead(esc(inv.folder))}</p>
   ${approvedNotice}
   <div class="chat-reply notice">${ICONS.comment}<span class="t">Reply in your chat with your agent</span><span class="d">For example <b>accept all</b>, or <b>accept all except D1: 2</b>. Every decision and option below has a number.</span></div>
   <div class="tiles">
     <div class="tile"><div class="v">${inv.files.length}</div><div class="k">Markdown files</div></div>
-    <div class="tile"><div class="v">${plan2.types.length}</div><div class="k">${words2.types}</div></div>
-    <div class="tile"><div class="v">${plan2.tags.length}</div><div class="k">${words2.tags}</div></div>
+    <div class="tile"><div class="v">${plan2.types.length}</div><div class="k">${words3.types}</div></div>
+    <div class="tile"><div class="v">${plan2.tags.length}</div><div class="k">${words3.tags}</div></div>
     <div class="tile"><div class="v${open2 ? " open" : ""}" data-open-tile>${open2}</div><div class="k">decisions open</div></div>
   </div>
   <h2>What we found</h2>
@@ -8276,7 +8276,7 @@ function overview(ctx) {
     ${foundRows(ctx)}
   </div>
   <h2>What happens next</h2>
-  <ol class="small">${words2.next.map((n2) => `
+  <ol class="small">${words3.next.map((n2) => `
     <li>${n2}</li>`).join("")}
   </ol>
 </section>`;
@@ -8600,33 +8600,33 @@ function footnotes(body) {
 var dirOf2 = (path3) => path3.includes("/") ? path3.slice(0, path3.lastIndexOf("/")) : "";
 function parseDoc(content, path3) {
   const text = content.replace(/\r\n?/g, "\n");
-  const split = splitYaml(text);
+  const split2 = splitYaml(text);
   const name = path3.slice(path3.lastIndexOf("/") + 1);
   const dir = dirOf2(path3);
   const role = name === "index.md" ? "directory-index" : name === "log.md" ? "update-log" : "concept";
-  const problems = [...split.problems];
+  const problems = [...split2.problems];
   let meta = { extensions: /* @__PURE__ */ new Set(), problems: [] };
   let okfVersion;
   if (role === "concept") {
-    meta = conceptMetadata(split.raw);
+    meta = conceptMetadata(split2.raw);
     problems.push(...meta.problems);
-    if (!split.has) problems.push({ kind: "missing-frontmatter", message: "Concept is missing YAML frontmatter delimiters." });
-    else if (!split.problems.length && meta.type === void 0) problems.push({ kind: "missing-required-type", message: "Concept frontmatter is missing required `type`." });
-  } else if (role === "directory-index" && dir === "" && typeof split.raw.okf_version === "string") okfVersion = split.raw.okf_version;
-  const notes = footnotes(split.body);
+    if (!split2.has) problems.push({ kind: "missing-frontmatter", message: "Concept is missing YAML frontmatter delimiters." });
+    else if (!split2.problems.length && meta.type === void 0) problems.push({ kind: "missing-required-type", message: "Concept frontmatter is missing required `type`." });
+  } else if (role === "directory-index" && dir === "" && typeof split2.raw.okf_version === "string") okfVersion = split2.raw.okf_version;
+  const notes = footnotes(split2.body);
   return {
     path: path3,
     role,
-    body: split.body,
-    hasFrontmatter: split.has && !split.problems.some((p) => p.kind === "non-mapping-frontmatter"),
-    raw: split.raw,
+    body: split2.body,
+    hasFrontmatter: split2.has && !split2.problems.some((p) => p.kind === "non-mapping-frontmatter"),
+    raw: split2.raw,
     extensions: meta.extensions,
     ...meta.type === void 0 ? {} : { type: meta.type },
     ...meta.title === void 0 ? {} : { title: meta.title },
     ...meta.status === void 0 ? {} : { status: meta.status },
     ...meta.sources === void 0 ? {} : { sources: meta.sources },
     ...okfVersion === void 0 ? {} : { okfVersion },
-    links: links(split.body, dir, path3),
+    links: links(split2.body, dir, path3),
     footnoteLabels: notes.labels,
     footnoteRefs: notes.refs,
     problems
@@ -9492,8 +9492,8 @@ function spell(word, first, corpus) {
   return first ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
 }
 function cleanName(name, corpus) {
-  const words2 = name.replace(/\.md$/i, "").split(/[-_\s]+/).filter(Boolean);
-  return words2.map((w, i) => spell(w, i === 0, corpus)).join(" ");
+  const words3 = name.replace(/\.md$/i, "").split(/[-_\s]+/).filter(Boolean);
+  return words3.map((w, i) => spell(w, i === 0, corpus)).join(" ");
 }
 var WEAK = /^(notes?|untitled|draft|doc\d*|document\d*|temp|tmp|new|page\d*|\d+|\d{4}-?\d{2}-?\d{2})$/i;
 function isWeakName(name) {
@@ -10318,10 +10318,10 @@ async function next(io, repo) {
   }
   const plan2 = new Map(loadPlan(repo).files.map((f) => [f.path, f]));
   const inv = loadInventory(repo);
-  const words2 = new Map(inv.files.map((f) => [f.path, f.words]));
+  const words3 = new Map(inv.files.map((f) => [f.path, f.words]));
   const batch = todo.slice(0, LIMITS.describeBatch);
   const lines = batch.map((f) => {
-    const n2 = words2.get(f.path) ?? 0;
+    const n2 = words3.get(f.path) ?? 0;
     const notes = [titleNote(state, f), ...n2 < LIMITS.thinWords ? ["little text: describe only what the page shows, or mark it unsure"] : []];
     return `${q(f.path)}  ${plan2.get(f.path)?.type ?? "unclassified"} \xB7 ${notes.join(" \xB7 ")} \xB7 ${n2} words`;
   });
@@ -10405,14 +10405,14 @@ async function review(io, repo) {
   const state = loadAct(repo);
   if (!state.wroteAt) throw new Error("nothing written yet: run `kleia-okf act write` first");
   const folder = join9(repo, inv.folder);
-  const words2 = new Map(inv.files.map((f) => [f.path, f.words]));
-  const stats = state.files.map((f) => ({ path: f.path, words: words2.get(f.path) ?? 0, nonProse: nonProseShare(splitFrontmatter(readFileSync9(join9(folder, f.path), "utf8")).body) }));
+  const words3 = new Map(inv.files.map((f) => [f.path, f.words]));
+  const stats = state.files.map((f) => ({ path: f.path, words: words3.get(f.path) ?? 0, nonProse: nonProseShare(splitFrontmatter(readFileSync9(join9(folder, f.path), "utf8")).body) }));
   state.flags = flagItems(state.files, stats, state.leftAlone ?? []);
   saveAct(repo, state);
   const byPath = new Map(plan2.files.map((f) => [f.path, f]));
   const examples = pickExamples(state.files, byPath);
-  const summary = actSummary(inv, plan2, state);
-  writeText(workFile(repo, "report.html"), renderReport(inv, plan2, "act", approval.approvedAt, { act: { state, examples, summary } }));
+  const summary2 = actSummary(inv, plan2, state);
+  writeText(workFile(repo, "report.html"), renderReport(inv, plan2, "act", approval.approvedAt, { act: { state, examples, summary: summary2 } }));
   const shown = state.flags.slice(0, LIMITS.reviewFlags);
   const more = state.flags.length - shown.length;
   const address = reportAddress(repo);
@@ -10421,7 +10421,7 @@ ${examples.map((e) => `- ${e.title}: ${e.description} (${e.path} \xB7 ${byPath.g
 ` : "examples: none, every document kept its own description\n";
   const show = examples.length ? "show the user what Act wrote, the examples and the flags, and give them the report link (it has every description); ask for one OK, or a comment on style" : "show the user what Act wrote and the flags, and give them the report link; ask for one OK";
   io.out(
-    `${summaryLines(summary)}
+    `${summaryLines(summary2)}
 ${shownExamples}flags:
 ${shown.length ? shown.map((f) => `- ${f.detail}: ${listed(f.paths)}`).join("\n") : "- none"}${more > 0 ? `
 - and ${more} more, listed in the report` : ""}
@@ -10506,8 +10506,8 @@ var FLAGS = {
   "left-alone": (p) => ({ kind: "later", title: `${n(p.length, "file")} with TOML, JSON or broken frontmatter`, what: "Setup never rewrites your own keys. Convert the frontmatter to YAML yourself, then run setup again for these files." })
 };
 var LATER = {
-  "kleia-okf.title.repeated_heading": [(c) => `${n(c, "page")} with the title repeated as the first heading`, "The fix is in your text (drop the first heading), which setup never changes. The optional Improve step can do it."],
-  "okf.link.broken_local": [(c) => `${n(c, "page")} with links to pages that are not in the folder`, "Fixing a link changes your text, which setup never does. Fix them yourself, or with the optional Improve step."],
+  "kleia-okf.title.repeated_heading": [(c) => `${n(c, "page")} with the title repeated as the first heading`, "Setup never changes your text. Once setup is done, ask your agent to improve the docs: Improve drops the heading, and changes no other word."],
+  "okf.link.broken_local": [(c) => `${n(c, "page")} with links to pages that are not in the folder`, "Setup never changes your text. Once setup is done, ask your agent to improve the docs: Improve fixes the links where exactly one page fits. Fix the rest yourself."],
   "kleia-okf.index.structure": [(c) => `${n(c, "section page")} with prose, not only lists`, "These are your own landing pages. They stay as they are; Kleia still shows them."]
 };
 var LATER_ANY = "Already in your docs. Setup leaves it as it is.";
@@ -10977,8 +10977,8 @@ function scan(folder, generated, bodies) {
   });
   const gone = new Set(moved.values());
   for (const path3 of missing.filter((p) => !gone.has(p))) {
-    const linkedFrom = docs.filter((d) => localLinks(d.body).some((t) => resolveLink(d.path, t) === path3)).map((d) => d.path);
-    items.push({ kind: "deleted", path: path3, linkedFrom, needs: [], answer: {} });
+    const linkedFrom2 = docs.filter((d) => localLinks(d.body).some((t) => resolveLink(d.path, t) === path3)).map((d) => d.path);
+    items.push({ kind: "deleted", path: path3, linkedFrom: linkedFrom2, needs: [], answer: {} });
   }
   return { items, leftAlone };
 }
@@ -12153,8 +12153,567 @@ next: use it in \`kleia-okf maintain describe\`, and tell the user the vocabular
   }
 };
 
+// src/commands/improve.ts
+import { readFileSync as readFileSync26, rmSync as rmSync5 } from "node:fs";
+import { join as join26 } from "node:path";
+
+// src/lib/improve-markdown.ts
+var FENCE3 = /^\s*(```+|~~~+)/;
+function codeLines(lines) {
+  let fence = null;
+  let indented = false;
+  return lines.map((line2, i) => {
+    const marker = FENCE3.exec(line2)?.[1];
+    if (marker) {
+      if (fence === null) fence = marker[0] ?? null;
+      else if (marker[0] === fence) fence = null;
+      return true;
+    }
+    if (fence !== null) return true;
+    const blankBefore = i === 0 || (lines[i - 1] ?? "").trim() === "";
+    indented = /^( {4}|\t)/.test(line2) && (indented || blankBefore);
+    return indented;
+  });
+}
+var ATX = /^(#{1,6})(\s+)(.*?)\s*#*\s*$/;
+var INLINE_LINK = /(!?)\[([^\]]*)\]\((<[^>]*>|[^)\s]+)([^)]*)\)/g;
+var isExternal = (target2) => /^[a-z][a-z0-9+.-]*:/i.test(target2.replace(/^</, ""));
+function plainMask(line2) {
+  const blank2 = (s) => "\0".repeat(s.length);
+  return line2.replace(/(`+)[^`]*?\1/g, blank2).replace(INLINE_LINK, blank2).replace(/\[[^\]]*\](\[[^\]]*\])?/g, blank2).replace(/\[\^[^\]]+\]/g, blank2).replace(/<[^>]+>/g, blank2);
+}
+var CODE_SPAN = /(`+)[^`]*?\1/g;
+function outsideCode(line2, fn) {
+  let out = "";
+  let last = 0;
+  for (const m of line2.matchAll(CODE_SPAN)) {
+    out += fn(line2.slice(last, m.index)) + m[0];
+    last = (m.index ?? 0) + m[0].length;
+  }
+  return out + fn(line2.slice(last));
+}
+var FOOTNOTE_REF = /\[\^([^\]\s]+)\]/g;
+var FOOTNOTE_DEF = /^\[\^([^\]\s]+)\]:/;
+
+// src/lib/improve-types.ts
+var KINDS = ["heading-repeat", "heading-levels", "link-fix", "link-add", "cite"];
+var KIND_TEXT = {
+  "heading-repeat": { name: "Drop a first heading that repeats the title", what: "Kleia already shows the title above the page, so readers see it twice. The heading line goes; nothing else changes." },
+  "heading-levels": { name: "Fix heading levels", what: "Kleia shows the title as the page heading, so the headings in the text start one level below it and never skip a level. Only the number of # changes." },
+  "link-fix": { name: "Fix broken links", what: "A link to a page that is not there, where exactly one page fits: the same name with .md, another letter case, or the only page with that file name. Only the link target changes." },
+  "link-add": { name: "Link pages that name each other", what: "The first time a page names another page by its title, the name becomes a link to it. The words stay as they are." },
+  cite: { name: "Cite outside links", what: "A link to another website becomes a declared source with a footnote, so Kleia lists it under Sources. Nothing is fetched." }
+};
+var split = (body) => body.split("\n");
+var WINDOW = 36;
+function sampleOf(before, after) {
+  const a = before.trim();
+  const b = after.trim();
+  let start2 = 0;
+  while (start2 < a.length && a[start2] === b[start2]) start2++;
+  let end = 0;
+  while (end < a.length - start2 && end < b.length - start2 && a[a.length - 1 - end] === b[b.length - 1 - end]) end++;
+  const from = Math.max(0, start2 - WINDOW);
+  const cut = (s) => `${from > 0 ? "\u2026" : ""}${s.slice(from, Math.min(s.length, s.length - end + WINDOW))}${s.length - end + WINDOW < s.length ? "\u2026" : ""}`;
+  const cap = (s) => s.length > 160 ? `${s.slice(0, 159)}\u2026` : s;
+  return [cap(cut(a)), cap(cut(b))];
+}
+function eachLink(body, fn) {
+  const lines = split(body);
+  const code = codeLines(lines);
+  const samples = [];
+  const out = lines.map((line2, i) => {
+    if (code[i]) return line2;
+    const next2 = outsideCode(line2, (part) => part.replace(INLINE_LINK, (all, image, text, target2, rest) => fn(all, image, text, target2, rest, part) ?? all));
+    if (next2 !== line2) samples.push(sampleOf(line2, next2));
+    return next2;
+  });
+  return { body: out.join("\n"), samples };
+}
+
+// src/lib/improve-cite.ts
+var slug = (s) => s.toLowerCase().replace(/[`*_~]/g, "").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-$/, "");
+function sourceId(text, url, taken) {
+  let host = "source";
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+  }
+  const base = slug(text) || slug(host) || "source";
+  let id = base;
+  for (let n2 = 2; taken.has(id); n2++) id = `${base}-${n2}`;
+  taken.add(id);
+  return id;
+}
+var citable = (url, text) => /^https?:\/\//i.test(url) && text.trim() !== "";
+function cite(page, drop) {
+  const taken = /* @__PURE__ */ new Set([...page.sourceIds, ...[...page.body.matchAll(/\[\^([^\]\s]+)\]/g)].map((m) => m[1] ?? "")]);
+  const seen = new Set(page.sourceUrls);
+  const sources = [];
+  const { body, samples } = eachLink(page.body, (all, image, text, target2, _rest, line2) => {
+    const url = target2.replace(/^<|>$/g, "");
+    if (image || !citable(url, text) || seen.has(url) || drop.has(`${page.path} -> ${url}`)) return null;
+    if (line2.slice(line2.indexOf(all) + all.length).startsWith("[^")) return null;
+    seen.add(url);
+    const id = sourceId(text, url, taken);
+    sources.push({ id, resource: url, title: text.replace(/[`*_]/g, "").trim() });
+    return `${all}[^${id}]`;
+  });
+  if (!sources.length) return null;
+  const trimmed = body.replace(/\n+$/, "");
+  const hasDefs = FOOTNOTE_DEF.test(split(trimmed).filter((l) => l.trim()).pop() ?? "");
+  const defs = sources.map((s) => `[^${s.id}]: ${s.title}`).join("\n");
+  return { body: `${trimmed}
+${hasDefs ? "" : "\n"}${defs}
+`, samples, sources, links: sources.map((s) => s.resource) };
+}
+
+// src/lib/improve-headings.ts
+function headingRepeat(page) {
+  if (!page.title) return null;
+  const lines = split(page.body);
+  const code = codeLines(lines);
+  const at = lines.findIndex((l, i) => !code[i] && ATX.test(l));
+  const m = at >= 0 ? ATX.exec(lines[at] ?? "") : null;
+  if (!m || (m[3] ?? "").trim().toLowerCase() !== page.title.trim().toLowerCase()) return null;
+  if (lines.slice(0, at).some((l) => l.trim() !== "")) return null;
+  const drop = lines[at + 1]?.trim() === "" ? 2 : 1;
+  return { body: [...lines.slice(0, at), ...lines.slice(at + drop)].join("\n"), samples: [[lines[at] ?? "", "(removed)"]] };
+}
+function headingLevels(page) {
+  const lines = split(page.body);
+  const code = codeLines(lines);
+  const headings = lines.flatMap((l, i) => {
+    const m = code[i] ? null : ATX.exec(l);
+    return m ? [{ i, level: (m[1] ?? "").length }] : [];
+  });
+  if (!headings.length) return null;
+  const parents = [];
+  const samples = [];
+  const out = [...lines];
+  for (const h of headings) {
+    while (parents.length && (parents[parents.length - 1]?.from ?? 0) >= h.level) parents.pop();
+    const level = Math.min(6, (parents[parents.length - 1]?.to ?? 1) + 1);
+    parents.push({ from: h.level, to: level });
+    if (level === h.level) continue;
+    const line2 = lines[h.i] ?? "";
+    out[h.i] = `${"#".repeat(level)}${line2.slice(h.level)}`;
+    samples.push([line2, out[h.i] ?? ""]);
+  }
+  return samples.length ? { body: out.join("\n"), samples } : null;
+}
+
+// src/lib/improve-links.ts
+function fitFor(resolved, folder) {
+  const pages = folder.pages.map((p) => p.path);
+  const withMd = resolved.endsWith(".md") ? resolved : `${resolved}.md`;
+  if (folder.files.has(withMd)) return withMd;
+  const one = (found) => found.length === 1 ? found[0] ?? null : null;
+  return one(pages.filter((p) => p.toLowerCase() === withMd.toLowerCase())) ?? one(pages.filter((p) => nameOf3(p) === nameOf3(withMd)));
+}
+function linkFix(page, folder) {
+  const { body, samples } = eachLink(page.body, (_all, image, text, target2, rest) => {
+    if (isExternal(target2) || target2.replace(/^</, "").startsWith("#")) return null;
+    const resolved = resolveLink(page.path, target2);
+    if (resolved === null || folder.files.has(resolved)) return null;
+    const fit = fitFor(resolved, folder);
+    return fit && fit !== page.path ? `${image}[${text}](${retarget(target2, dirOf3(page.path), fit)}${rest})` : null;
+  });
+  return samples.length ? { body, samples } : null;
+}
+var MAX_NEW_LINKS = 5;
+var escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function linkedFrom(page) {
+  const lines = split(page.body);
+  const code = codeLines(lines);
+  return new Set(lines.flatMap((l, i) => code[i] ? [] : [...l.matchAll(INLINE_LINK)].map((m) => resolveLink(page.path, m[3] ?? "") ?? "")));
+}
+function mayLink(page, to, already, drop) {
+  const words3 = to.title?.trim().split(/\s+/).length ?? 0;
+  return to.path !== page.path && words3 >= 2 && !already.has(to.path) && !drop.has(`${page.path} -> ${to.path}`);
+}
+function linkAdd(page, folder, drop) {
+  const already = linkedFrom(page);
+  const count2 = /* @__PURE__ */ new Map();
+  for (const p of folder.pages) {
+    const t = p.title?.trim().toLowerCase();
+    if (t) count2.set(t, (count2.get(t) ?? 0) + 1);
+  }
+  const candidates2 = folder.pages.filter((p) => count2.get(p.title?.trim().toLowerCase() ?? "") === 1 && mayLink(page, p, already, drop)).sort((a, b) => (b.title ?? "").length - (a.title ?? "").length);
+  const lines = split(page.body);
+  const code = codeLines(lines);
+  const samples = [];
+  const links2 = [];
+  for (const target2 of candidates2) {
+    if (links2.length >= MAX_NEW_LINKS) break;
+    const re = new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe((target2.title ?? "").trim())}(?![\\p{L}\\p{N}])`, "iu");
+    const title = (target2.title ?? "").trim().toLowerCase();
+    const at = lines.findIndex((l, i) => !code[i] && l.toLowerCase().includes(title) && proseLine(l) && plainHit(l, re) !== null);
+    if (at < 0) continue;
+    const line2 = lines[at] ?? "";
+    const hit = plainHit(line2, re);
+    const rel = retarget(target2.path, dirOf3(page.path), target2.path);
+    const next2 = `${line2.slice(0, hit[0])}[${line2.slice(hit[0], hit[1])}](${rel})${line2.slice(hit[1])}`;
+    lines[at] = next2;
+    samples.push(sampleOf(line2, next2));
+    links2.push(target2.path);
+  }
+  return links2.length ? { body: lines.join("\n"), samples, links: links2 } : null;
+}
+var proseLine = (l) => !ATX.test(l) && !FOOTNOTE_DEF.test(l) && !/^\s*\[[^\]]+\]:/.test(l);
+function plainHit(line2, re) {
+  const mask = plainMask(line2);
+  const m = re.exec(mask);
+  return m && !m[0].includes("\0") ? [m.index, m.index + m[0].length] : null;
+}
+
+// src/lib/improve-kinds.ts
+var MAKE = {
+  "heading-repeat": (page) => headingRepeat(page),
+  "heading-levels": (page) => headingLevels(page),
+  "link-fix": (page, folder) => linkFix(page, folder),
+  "link-add": linkAdd,
+  cite: (page, _folder, drop) => cite(page, drop)
+};
+var editFor = (kind, page, folder, drop) => MAKE[kind](page, folder, drop);
+
+// src/lib/improve-run.ts
+import { existsSync as existsSync25, readFileSync as readFileSync25 } from "node:fs";
+import { join as join25 } from "node:path";
+
+// src/lib/improve-guard.ts
+function words2(body, newSources = /* @__PURE__ */ new Set()) {
+  const lines = body.split("\n");
+  const code = codeLines(lines);
+  return lines.flatMap((l, i) => {
+    if (code[i]) return [l];
+    if (newSources.has(FOOTNOTE_DEF.exec(l)?.[1] ?? "\0")) return [];
+    return [outsideCode(l.replace(/^#{1,6}\s+/, ""), (part) => part.replace(INLINE_LINK, (_a, _img, text) => ` ${text} `).replace(FOOTNOTE_REF, " "))];
+  }).join(" ").split(/\s+/).filter(Boolean);
+}
+var targetsOf = (body) => {
+  const lines = body.split("\n");
+  const code = codeLines(lines);
+  return lines.flatMap((l, i) => code[i] ? [] : [...l.matchAll(INLINE_LINK)].map((m) => m[3] ?? ""));
+};
+function newTargets(before, after) {
+  const left = [...targetsOf(before)];
+  return targetsOf(after).filter((t) => {
+    const i = left.indexOf(t);
+    if (i >= 0) left.splice(i, 1);
+    return i < 0;
+  });
+}
+function firstHeadingWords(body) {
+  const lines = body.split("\n");
+  const code = codeLines(lines);
+  const heading = lines.find((l, i) => !code[i] && ATX.test(l));
+  const before = heading === void 0 ? [] : words2(lines.slice(0, lines.indexOf(heading)).join("\n"));
+  return heading === void 0 || before.length ? [] : words2(heading);
+}
+var headingCount = (body) => {
+  const lines = body.split("\n");
+  const code = codeLines(lines);
+  return lines.filter((l, i) => !code[i] && ATX.test(l)).length;
+};
+function bodyProblem({ path: path3, kind, before, after, files: files2, newSources }) {
+  const was = words2(before);
+  const now2 = words2(after, new Set(newSources));
+  const removed = kind === "heading-repeat" ? firstHeadingWords(before) : [];
+  const sameWords = [...removed, ...now2].join(" ") === was.join(" ") && (kind !== "heading-repeat" || removed.length > 0);
+  if (!sameWords) return `${path3}: ${kind} would change its words`;
+  const expected = kind === "heading-repeat" ? headingCount(before) - 1 : headingCount(before);
+  if (headingCount(after) !== expected) return `${path3}: ${kind} would change which lines are headings`;
+  const pointless = newTargets(before, after).filter((t) => !isExternal(t) && !files2.has(resolveLink(path3, t) ?? ""));
+  if (pointless.length) return `${path3}: ${kind} would add a link to a file that is not there (${pointless.join(", ")})`;
+  if (kind !== "cite" && newTargets(before, after).some(isExternal)) return `${path3}: ${kind} would add an outside link`;
+  const known = /* @__PURE__ */ new Set([...footnoteLabels(before), ...newSources]);
+  const strange = [...footnoteLabels(after)].filter((l) => !known.has(l));
+  return strange.length ? `${path3}: ${kind} would add a footnote that is not a new source (${strange.join(", ")})` : null;
+}
+function footnoteLabels(body) {
+  const lines = body.split("\n");
+  const code = codeLines(lines);
+  return new Set(lines.flatMap((l, i) => code[i] ? [] : [...l.matchAll(FOOTNOTE_REF)].map((m) => m[1] ?? "")));
+}
+function keysProblem(path3, before, after, allowed2) {
+  const a = fingerprintOf(path3, Buffer.from(before));
+  const b = fingerprintOf(path3, Buffer.from(after));
+  const changed = Object.entries(a.keys ?? {}).find(([k, h]) => !allowed2.includes(k) && b.keys?.[k] !== h);
+  return changed ? `${path3}: its key \`${changed[0]}\` would change` : null;
+}
+
+// src/lib/improve-run.ts
+var STATE = "improve.json";
+var loadImprove = (repo) => existsSync25(workFile(repo, STATE)) ? readJson(workFile(repo, STATE)) : null;
+var saveImprove = (repo, state) => writeJson(workFile(repo, STATE), state);
+var sourcesOf2 = (data) => Array.isArray(data.sources) ? data.sources.flatMap((s) => s && typeof s === "object" ? [{ id: String(s.id ?? ""), resource: String(s.resource ?? "") }] : []) : [];
+var canAddSources = (raw, data) => raw === void 0 || /^sources:[ \t]*\r?\n[ \t]*- /.test(raw) && Array.isArray(data.sources) && data.sources.every((s) => s !== null && typeof s === "object");
+function readFolder(root) {
+  const { docs } = readDocs(root);
+  const pages = docs.map((d) => {
+    const sources = sourcesOf2(d.data);
+    return { path: d.path, body: d.body, title: typeof d.data.title === "string" ? d.data.title : null, sourceIds: sources.map((s) => s.id), sourceUrls: sources.map((s) => s.resource) };
+  });
+  const citable2 = new Set(docs.filter((d) => canAddSources(splitFrontmatter(d.text).rawKeys.sources, d.data)).map((d) => d.path));
+  return { folder: { files: new Set(walk(root).all), pages }, texts: new Map(docs.map((d) => [d.path, d.text])), citable: citable2 };
+}
+function improvePage(page, kinds, read, drop) {
+  const out = { path: page.path, body: page.body, kinds: [], problems: [] };
+  for (const kind of kinds) {
+    if (kind === "cite" && !read.citable.has(page.path)) continue;
+    const edit = editFor(kind, { ...page, body: out.body }, read.folder, drop);
+    if (!edit) continue;
+    const problem = bodyProblem({ path: page.path, kind, before: out.body, after: edit.body, files: read.folder.files, newSources: (edit.sources ?? []).map((s) => s.id) });
+    if (problem) {
+      out.problems.push(problem);
+      continue;
+    }
+    out.body = edit.body;
+    out.kinds.push({ kind, edit });
+  }
+  return out;
+}
+function improveAll(read, kinds, drop, skip = /* @__PURE__ */ new Set()) {
+  return read.folder.pages.filter((p) => !skip.has(p.path)).map((p) => improvePage(p, kinds, read, drop));
+}
+function scanState(root, read, results2, drop) {
+  const byKind = KINDS.map((kind) => ({ kind, pages: results2.flatMap((r) => r.kinds.filter((k) => k.kind === kind).map((k) => ({ path: r.path, samples: k.edit.samples.slice(0, 3) }))) })).filter((k) => k.pages.length);
+  const links2 = results2.flatMap((r) => r.kinds.filter((k) => k.kind === "link-add" || k.kind === "cite").flatMap((k) => (k.edit.links ?? []).map((to) => `${r.path} -> ${to}`)));
+  const hashes = Object.fromEntries([...read.texts.keys()].map((p) => [p, sha(readFileSync25(join25(root, p)))]));
+  return { scannedAt: isoNow(), hashes, kinds: byKind.map((k, i) => ({ id: `I${i + 1}`, ...k })), drop, links: links2 };
+}
+function withSources(text, sources) {
+  const raw = splitFrontmatter(text).rawKeys.sources;
+  const eol = text.includes("\r\n") ? "\r\n" : "\n";
+  const indent = raw ? /\n([ \t]*)- /.exec(raw)?.[1] ?? "  " : "  ";
+  const entries2 = sources.flatMap((s) => [`${indent}- id: ${yamlScalar(s.id)}`, `${indent}  resource: ${JSON.stringify(s.resource)}`, `${indent}  title: ${yamlScalar(s.title)}`]);
+  if (raw) return replaceKey(text, "sources", [raw.replace(/\r?\n/g, eol), ...entries2]);
+  const generated = splitFrontmatter(text).rawKeys.generated;
+  return generated ? replaceKey(text, "generated", ["sources:", ...entries2, generated.replace(/\r?\n/g, eol)]) : replaceKey(text, "sources", ["sources:", ...entries2]);
+}
+function applyImprove(repo, root, results2, generated) {
+  const read = readFolder(root);
+  const by = gitUser(repo);
+  const at = isoNow();
+  const undo = new Undo(root);
+  const problems = results2.flatMap((r) => r.problems);
+  const written = [];
+  for (const r of results2.filter((x) => x.kinds.length)) {
+    const before = read.texts.get(r.path) ?? "";
+    const sources = r.kinds.flatMap((k) => k.edit.sources ?? []);
+    let next2 = `${splitFrontmatter(before).block}${r.body}`;
+    if (sources.length) next2 = withSources(next2, sources);
+    if (by) next2 = replaceKey(next2, "generated", okfLines({ generated: { by, at } }, /* @__PURE__ */ new Set()));
+    const problem = keysProblem(r.path, before, next2, ["generated", ...sources.length ? ["sources"] : []]) ?? (splitFrontmatter(next2).body === r.body ? null : `${r.path}: its text would not be what the guard checked`);
+    if (problem) problems.push(problem);
+    else {
+      undo.write(r.path, next2);
+      written.push(r.path);
+    }
+  }
+  const logs = problems.length ? [] : logImproved(root, results2.filter((r) => written.includes(r.path)), generated, undo, at.slice(0, 10));
+  const failed = problems.length ? problems : undo.mismatches();
+  if (failed.length) {
+    undo.restore();
+    return { ok: false, problems: failed };
+  }
+  const bodies = Object.fromEntries(results2.filter((r) => written.includes(r.path)).map((r) => [r.path, textKey(r.body)]));
+  return { ok: true, written, logs, bodies, noStamp: !by };
+}
+function logImproved(root, results2, generated, undo, date) {
+  const logs = generated.filter((p) => p.endsWith("log.md"));
+  const groups = /* @__PURE__ */ new Map();
+  for (const r of results2) {
+    const log = nearestLog(r.path, logs);
+    if (log) groups.set(log, [...groups.get(log) ?? [], r]);
+  }
+  for (const [log, rs] of groups) {
+    const kinds = KINDS.filter((k) => rs.some((r) => r.kinds.some((x) => x.kind === k))).map((k) => KIND_TEXT[k].name.toLowerCase());
+    const existing = existsSync25(join25(root, log)) ? readFileSync25(join25(root, log), "utf8") : null;
+    undo.write(log, renderLog(existing, date, `**Improved**: ${plural2(rs.length, "document")}: ${kinds.join("; ")}.`, false));
+  }
+  return [...groups.keys()];
+}
+
+// src/report/improve.ts
+var sample2 = ([before, after]) => `<tr><td><code>${esc(before)}</code></td><td><code>${esc(after)}</code></td></tr>`;
+function card2(k) {
+  const text = KIND_TEXT[k.kind];
+  const samples = k.pages.flatMap((p) => p.samples.map((s) => [p.path, s])).slice(0, 3);
+  return `<section class="chapter" id="${esc(k.id)}">
+  <h2>${esc(k.id)}: ${esc(text.name)}</h2>
+  <p class="lead">${esc(text.what)} ${plural(k.pages.length, "page")}.</p>
+  <div class="panel"><table><thead><tr><th>Before</th><th>After</th></tr></thead><tbody>${samples.map(([, s]) => sample2(s)).join("")}</tbody></table></div>
+  <details class="all"><summary>All ${plural(k.pages.length, "page")}</summary><ul class="small">${k.pages.map((p) => `<li><code>${esc(p.path)}</code>${p.samples.map((s) => `<br><span class="muted">${esc(s[0])} \u2192 ${esc(s[1])}</span>`).join("")}</li>`).join("")}</ul></details>
+</section>`;
+}
+function renderImprove(folder, state) {
+  const body = state.kinds.length ? state.kinds.map(card2).join("\n") : '<p class="lead">Nothing to improve: every page already reads well as OKF.</p>';
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kleia OKF \xB7 Improve ${esc(folder)}/</title>
+<style>${css()} main { padding: 48px 24px 96px; max-width: 980px; margin: 0 auto; }</style>
+</head>
+<body>
+<main><div class="page">
+<section class="chapter">
+  <h1>Improve ${esc(folder)}/</h1>
+  <div class="notice">${ICONS.comment}<span class="t">Reply in your chat with your agent</span><span class="d">Say yes or no to each kind, for example "I1 yes, I2 no". You can also leave out a page by name.</span></div>
+  <p class="lead">Each kind changes only Markdown markup. The words of every page stay exactly as they are; a check refuses any edit that would change one. Improved pages get a fresh <code>generated</code>, and one entry in the log.</p>
+</section>
+${body}
+</div></main>
+</body>
+</html>
+`;
+}
+
+// src/commands/improve.ts
+var STEPS3 = "scan, drop or apply";
+function refuse5(io, why, next2) {
+  io.out(`refused: ${why}
+next: ${next2}`);
+  return 1;
+}
+function maintainPending(repo, v) {
+  const { items } = scan(join26(repo, v.folder), v.generated, loadMaintain(repo).bodies);
+  return items.length ? `${plural2(items.length, "document")} changed since the bundle was last brought up to date` : null;
+}
+function render(repo, v, state) {
+  const path3 = workFile(repo, "improve.html");
+  writeText(path3, renderImprove(v.folder, state));
+  return path3;
+}
+function summary(state) {
+  return state.kinds.map((k) => {
+    const first = k.pages[0]?.samples[0];
+    return `${k.id} ${KIND_TEXT[k.kind].name}: ${plural2(k.pages.length, "page")}${first ? `, for example ${q(first[0])} \u2192 ${q(first[1])}` : ""}`;
+  });
+}
+function scanStep2(io, repo, v, drop) {
+  const root = join26(repo, v.folder);
+  const read = readFolder(root);
+  const results2 = improveAll(read, ["heading-repeat", "heading-levels", "link-fix", "link-add", "cite"], new Set(drop));
+  const state = scanState(root, read, results2, drop);
+  saveImprove(repo, state);
+  const report2 = render(repo, v, state);
+  if (!state.kinds.length) {
+    io.out(`improve scan: ${v.folder}/ \xB7 nothing to improve
+next: tell the user the pages already read well as OKF`);
+    return 0;
+  }
+  const refused = results2.flatMap((r) => r.problems);
+  const refusedLines = refused.length ? [`refused, so these pages would stop apply (pass them with --skip):
+${refused.map((p) => `- ${p}`).join("\n")}`] : [];
+  const links2 = state.links.length ? [`new links and sources, to check one by one:
+${state.links.map((l) => `- ${l}`).join("\n")}`] : [];
+  io.out(
+    [
+      `improve scan: ${v.folder}/ \xB7 ${plural2(state.kinds.length, "kind")} of edit`,
+      ...summary(state),
+      ...refusedLines,
+      ...links2,
+      `report: ${report2}`,
+      `next: ${links2.length ? 'read each new link and source in its sentence; for a link that does not mean the other page, or a source that backs no statement (a download, a tool, a product page), send "page" -> "target" lines to `kleia-okf improve drop`. Then ' : ""}show the user the report and ask yes or no for each kind (I1, I2, \u2026). Then run \`kleia-okf improve apply --yes <the ids they said yes to>\`, with --skip "<path>,<path>" for pages they leave out`
+    ].join("\n")
+  );
+  return 0;
+}
+async function dropStep(args, io, repo, v) {
+  const state = loadImprove(repo);
+  if (!state) return refuse5(io, "there is no scan yet", "run `kleia-okf improve scan` first");
+  const text = flag(args, "text") ?? await io.stdin();
+  const pairs = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const parsed = pairs.map((l) => /^"([^"]+)"\s*->\s*"([^"]+)"$/.exec(l));
+  const bad = pairs.filter((_l, i) => !parsed[i]);
+  if (bad.length) return refuse5(io, `unreadable lines: ${bad.join("; ")}`, 'send lines as "page.md" -> "target.md", or "page.md" -> "https://\u2026" for a source');
+  const drops = parsed.map((m) => `${m?.[1]} -> ${m?.[2]}`);
+  const unknown = drops.filter((d) => !state.links.includes(d));
+  if (unknown.length) return refuse5(io, `not a new link from the scan: ${unknown.join("; ")}`, "send only links and sources the scan listed");
+  return scanStep2(io, repo, v, [.../* @__PURE__ */ new Set([...state.drop, ...drops])]);
+}
+var staleSince = (root, hashes) => Object.entries(hashes).filter(([p, h]) => {
+  try {
+    return sha(readFileSync26(join26(root, p))) !== h;
+  } catch {
+    return true;
+  }
+}).map(([p]) => p);
+function applyBlocked(repo, v, state, yes) {
+  const unknown = yes.filter((id) => !state.kinds.some((k) => k.id === id));
+  const checks = [
+    () => !yes.length || unknown.length ? [unknown.length ? `no kind ${unknown.join(", ")} in the scan` : "no kinds given", "pass the ids the user said yes to, as --yes I1,I3"] : null,
+    () => {
+      const stale = staleSince(join26(repo, v.folder), state.hashes);
+      return stale.length ? [`changed since the scan: ${stale.map(q).join(", ")}`, "run `kleia-okf improve scan` again and show the user the new report"] : null;
+    },
+    () => {
+      const pending2 = maintainPending(repo, v);
+      return pending2 ? [pending2, "run the Maintain loop first (`kleia-okf maintain scan`), then `kleia-okf improve scan` again"] : null;
+    }
+  ];
+  for (const check2 of checks) {
+    const why = check2();
+    if (why) return why;
+  }
+  return null;
+}
+function applyStep(args, io, repo, v) {
+  const state = loadImprove(repo);
+  const yes = (flag(args, "yes") ?? "").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
+  if (!state) return refuse5(io, "there is no scan yet", "run `kleia-okf improve scan` first");
+  const blocked = applyBlocked(repo, v, state, yes);
+  if (blocked) return refuse5(io, blocked[0], blocked[1]);
+  const root = join26(repo, v.folder);
+  const kinds = state.kinds.filter((k) => yes.includes(k.id)).map((k) => k.kind);
+  const skip = new Set((flag(args, "skip") ?? "").split(",").map((s) => s.trim()).filter(Boolean));
+  const results2 = improveAll(readFolder(root), kinds, new Set(state.drop), skip).filter((r) => r.path in state.hashes);
+  const out = applyImprove(repo, root, results2, v.generated);
+  if (!out.ok) return refuse5(io, `nothing was written, because:
+${out.problems.map((p) => `- ${p}`).join("\n")}`, "tell the user which page and kind; never edit a page's text to get past this");
+  const maintain2 = loadMaintain(repo);
+  const pending2 = [.../* @__PURE__ */ new Set([...maintain2.confirm ?? [], ...out.written])];
+  saveMaintain(repo, { ...maintain2, bodies: { ...maintain2.bodies, ...out.bodies }, confirm: pending2 });
+  rmSync5(workFile(repo, "improve.json"), { force: true });
+  io.out(
+    [
+      `improved ${plural2(out.written.length, "page")} (${kinds.map((k) => KIND_TEXT[k].name.toLowerCase()).join("; ")}) \xB7 every word unchanged \xB7 log: ${out.logs.join(", ") || "none"}`,
+      ...out.noStamp ? ["no `generated` written: git has no user.name here"] : [],
+      ...pending2.length ? [`question for the user, asked once: "${question(pending2)}"`, "next: ask the user that question; on their yes run `kleia-okf maintain confirm --answer yes`, otherwise `--answer no`"] : ["next: tell the user in one line what changed"]
+    ].join("\n")
+  );
+  return 0;
+}
+var improve = {
+  name: "improve",
+  summary: "Better OKF markup without changing a word: scan, drop, then apply the kinds the user said yes to",
+  usage: `kleia-okf improve <${STEPS3.replace(/, | or /g, "|")}> [--text "<lines>"] [--yes I1,I2] [--skip "<path>,<path>"] [--repo <dir>]`,
+  flags: [
+    ["scan", "Find every edit each kind would make; write the report and list new links to check"],
+    ["drop", 'Read "page" -> "target" lines from --text or stdin: new links or sources that read wrong, left out'],
+    ["apply", "With --yes I1,I3, make those kinds of edit; --skip leaves pages out. Every word stays"],
+    REPO_FLAG
+  ],
+  async run(args, io) {
+    const repo = repoOf(args, io);
+    const step3 = args.positional[0];
+    if (!step3 || !["scan", "drop", "apply"].includes(step3)) throw new Error(`usage: kleia-okf improve <step>, where the step is ${STEPS3}`);
+    const v = vocabularyOr(repo);
+    if (typeof v === "string") return refuse5(io, v, "use the `kleia-okf-setup` skill to set the docs up first");
+    const pending2 = step3 === "apply" ? null : maintainPending(repo, v);
+    if (pending2) return refuse5(io, pending2, "run the Maintain loop first (`kleia-okf maintain scan`), then Improve");
+    if (step3 === "scan") return scanStep2(io, repo, v, loadImprove(repo)?.drop ?? []);
+    if (step3 === "drop") return dropStep(args, io, repo, v);
+    return applyStep(args, io, repo, v);
+  }
+};
+
 // src/cli.ts
-var COMMANDS = [find, inventory, plan, report, serve, wait, feedback, approve, act, check, verify, finish, maintain, vocabulary2];
+var COMMANDS = [find, inventory, plan, report, serve, wait, feedback, approve, act, check, verify, finish, maintain, improve, vocabulary2];
 var OVERVIEW = `kleia-okf: turn a docs folder into an OKF v0.2 Knowledge Bundle, then keep it that way.
 
 Commands:

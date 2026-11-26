@@ -32,7 +32,7 @@ In chat, say in a few lines:
 `report` prints **what the user can do**: one item per kind of problem, errors already in the docs first, numbered R1, R2, …, and the Results chapter shows the same list. Each item has a kind:
 - **fix:** you can do it now, after a yes. Offer each as one short choice with your recommendation, for example: "R1: 4 integration guides got descriptions that read almost the same. Shall I rewrite them so each says what sets its page apart? (recommended)".
 - **look:** one line pointing to the report. Change nothing unless the user asks.
-- **later:** one line saying why setup doesn't change it and where it can be done (the user, or the optional Improve step). Group these into a single short paragraph.
+- **later:** one line saying why setup doesn't change it and where it can be done (the user, or Improve once setup is done). Group these into a single short paragraph.
 
 Offer fixes before anything else, and before the user verifies a folder: Act refuses to rewrite a file that changed after it wrote it, and `verify` changes files.
 
@@ -62,4 +62,5 @@ Then give one summary:
 - problems that were already there, if any, with their count. When some are errors, say plainly that `check` fails on them, so CI would fail on every pull request until they are fixed (`finish` prints a warning);
 - the CI snippet `finish` printed, for the user to copy if they want `check` on every pull request, with its CI note (the skill folder must be in the repository for CI to run it). Never install it yourself;
 - what to commit: the docs folder, `.kleia-okf/vocabulary.yml`, `.kleia-okf/.gitignore`, and `AGENTS.md` after a yes. `.kleia-okf/work/` stays out of git;
+- when any item named Improve: one line offering it, for example "Once you've committed, I can improve the docs: drop repeated headings and fix the links that have one clear target, without changing a word. Want that?" On a yes, use the `kleia-okf` skill's Improve;
 - **commit when ready**. You don't commit.

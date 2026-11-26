@@ -5,7 +5,7 @@ Agent Skills for [Kleia](https://kleia.dev), the knowledge base built on the Ope
 | Skill | What it does |
 |---|---|
 | `kleia-okf-setup` | Turns an existing docs folder into an OKF v0.2 Knowledge Bundle without changing what the docs say. It works in three stages, Analyze, Act and Validate, and asks for your go-ahead at each one. |
-| `kleia-okf` | Keeps that bundle correct as the docs are edited. It adds frontmatter to new documents, updates changed ones, fixes links to moved ones, and keeps the folder indexes and the update log current. |
+| `kleia-okf` | Keeps that bundle correct as the docs are edited. It adds frontmatter to new documents, updates changed ones, fixes links to moved ones, and keeps the folder indexes and the update log current. On request, it also improves the Markdown: headings, links between pages and citations, without changing a word. |
 
 ## Install
 
@@ -29,7 +29,7 @@ Afterwards, agents use `kleia-okf` whenever they edit the docs. Setup can add a 
 - `.kleia-okf/vocabulary.yml`: the types and tags you agreed on. Commit it with your docs.
 - `.kleia-okf/work/`: working files, which git ignores.
 
-They never change the text of a document. The one exception is a link to a document that moved. They make no git commits and no network calls.
+They never change the words of a document. The only edits to its text are Markdown markup: a link to a document that moved, and the Improve edits you say yes to. They make no git commits and no network calls.
 
 ## About this repository
 
