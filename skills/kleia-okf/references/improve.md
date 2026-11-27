@@ -12,10 +12,9 @@ The scan numbers only the kinds that have edits, I1, I2, …, in this order.
 
 **Fix broken links.** A link to a page that isn't there is fixed only when exactly one page fits:
 - the same path with `.md` added: `(setup)` → `(setup.md)`;
-- the same path in another letter case: `(Errors.md)` → `(errors.md)`;
-- the only page in the folder with that file name: `(old/errors.md)` → `(../reference/errors.md)`.
+- the same path in another letter case: `(Errors.md)` → `(errors.md)`.
 
-Any other broken link stays as it is, and `check` keeps listing it. Tell the user which ones, and let them decide.
+A page with the same file name in another folder is no fit: it is often a different page. Any other broken link stays as it is, and `check` keeps listing it. Tell the user which ones, and let them decide.
 
 **Link pages that name each other.** The first time a page names another page by its exact title, the name becomes a link: `rotate API keys first` → `[rotate API keys](rotate-api-keys.md) first`. Only titles of two words or more count, never in code, headings or existing links, at most 5 new links per page, and never to a page it already links to.
 

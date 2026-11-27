@@ -8859,8 +8859,9 @@ function runCheck(folder, setup) {
   const documents = docs.filter((d) => d.role === "concept").length;
   if (!setup) return { findings, documents, allowed: [] };
   const before = new Set(allFindings(baselineBundle(setup, folder, bundle)).findings.map(findingKey));
-  const pivotTitles = new Set(setup.state.files.filter((f) => f.titleSource === "name").map((f) => f.path));
-  const marked = findings.filter((f) => !(f.code === CODES.repeatedHeading.code && pivotTitles.has(f.path))).map((f) => ({ ...f, cause: before.has(findingKey(f)) ? "existing" : "pivot" }));
+  const nameTitles = new Set(setup.state.files.filter((f) => f.titleSource === "name").map((f) => f.path));
+  const existing = (f) => before.has(findingKey(f)) || f.code === CODES.repeatedHeading.code && nameTitles.has(f.path);
+  const marked = findings.map((f) => ({ ...f, cause: existing(f) ? "existing" : "pivot" }));
   const { findings: changed, allowed: allowed2 } = integrity(setup, folder);
   const trust2 = trustFindings(setup, folder, new Map(docs.map((d) => [d.path, d])));
   const own2 = [...changed, ...trust2, ...vocabularyFindings(setup, docs)];
@@ -12305,11 +12306,10 @@ function headingLevels(page) {
 
 // src/lib/improve-links.ts
 function fitFor(resolved, folder) {
-  const pages = folder.pages.map((p) => p.path);
   const withMd = resolved.endsWith(".md") ? resolved : `${resolved}.md`;
   if (folder.files.has(withMd)) return withMd;
-  const one = (found) => found.length === 1 ? found[0] ?? null : null;
-  return one(pages.filter((p) => p.toLowerCase() === withMd.toLowerCase())) ?? one(pages.filter((p) => nameOf3(p) === nameOf3(withMd)));
+  const found = folder.pages.map((p) => p.path).filter((p) => p.toLowerCase() === withMd.toLowerCase());
+  return found.length === 1 ? found[0] ?? null : null;
 }
 function linkFix(page, folder) {
   const { body, samples } = eachLink(page.body, (_all, image, text, target2, rest) => {
@@ -12388,7 +12388,7 @@ function words2(body, newSources = /* @__PURE__ */ new Set()) {
   return lines.flatMap((l, i) => {
     if (code[i]) return [l];
     if (newSources.has(FOOTNOTE_DEF.exec(l)?.[1] ?? "\0")) return [];
-    return [outsideCode(l.replace(/^#{1,6}\s+/, ""), (part) => part.replace(INLINE_LINK, (_a, _img, text) => ` ${text} `).replace(FOOTNOTE_REF, " "))];
+    return [outsideCode(l.replace(/^#{1,6}\s+/, ""), (part) => part.replace(INLINE_LINK, (_a, _img, text) => text).replace(FOOTNOTE_REF, ""))];
   }).join(" ").split(/\s+/).filter(Boolean);
 }
 var targetsOf = (body) => {
